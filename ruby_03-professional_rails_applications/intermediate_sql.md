@@ -180,7 +180,8 @@ This is useful, but we probably don't need all of the information from both tabl
 * Can you get it to display only the name for the item and the name for the season?
 * Having two columns with the same name is confusing. Can you customize each heading using `AS`?
 
-```SELECT items.name as item_name, seasons.name as seasons_name FROM items
+```sql
+SELECT items.name as item_name, seasons.name as seasons_name FROM items
 INNER JOIN seasons
 ON items.season_id = seasons.id;
 ```
@@ -205,7 +206,8 @@ Now let's combine multiple `INNER JOIN`s to pull data from three tables `items`,
 * Write a query that pulls all the category names for `arugula salad`.
   Hint: Use multiple `INNER JOIN`s and a `WHERE` clause.
   
-```SELECT items.name, categories.name FROM items 
+```sql
+SELECT items.name, categories.name FROM items 
 INNER JOIN item_categories ON items.id = item_categories.item_id 
 INNER JOIN categories ON categories.id = item_categories.category_id
 WHERE items.name = 'arugula salad';
@@ -223,7 +225,8 @@ arugula salad | vegetarian
 (4 rows)
 ```
 
-```SELECT items.name as item_name, categories.name as category_name FROM items 
+```sql
+SELECT items.name as item_name, categories.name as category_name FROM items 
 INNER JOIN item_categories ON items.id = item_categories.item_id 
 INNER JOIN categories ON categories.id = item_categories.category_id 
 WHERE items.name = 'arugula salad';
@@ -308,7 +311,8 @@ What do you think a `RIGHT OUTER JOIN` will do?
 * Write a query to test your guess.
 * Insert data into the right table that will not get returned on an `INNER JOIN`.
 
-```SELECT *
+```sql
+SELECT *
 FROM items i
 RIGHT OUTER JOIN seasons s
 ON i.season_id = s.id;
@@ -348,7 +352,8 @@ WHERE revenue > (Insert your query that calculates the avg inside these parenthe
 
 The result should look like so...
 
-```SELECT * FROM items i
+```sql
+SELECT * FROM items i
 WHERE revenue > (SELECT avg(revenue) FROM items);
 ```
 
@@ -365,14 +370,16 @@ id |         name         | revenue | season_id
 
 
 1. Without looking at the previous solution, write a `WHERE` clause that returns the items that have a revenue less than the average revenue.
-```SELECT * FROM items
+```sql 
+SELECT * FROM items
 WHERE revenue < (SELECT avg(revenue) FROM items);
 ```
 
 ### Additional Challenges
 
 * Write a query that returns the sum of all items that have a category of dinner.
-```SELECT sum(revenue), categories.name FROM items
+```sql 
+SELECT sum(revenue), categories.name FROM items
 JOIN item_categories ON items.id = item_categories.item_id
 JOIN categories ON categories.id = item_categories.category_id
 WHERE categories.name = 'dinner' 
@@ -380,7 +387,8 @@ GROUP BY categories.name;
 ```
 
 * Write a query that returns the sum of all items for each category. The end result should look like this:
-```SELECT sum(revenue), categories.name FROM items
+```sql
+SELECT sum(revenue), categories.name FROM items
 JOIN item_categories ON items.id = item_categories.item_id
 JOIN categories ON categories.id = item_categories.category_id
 GROUP BY categories.name;
