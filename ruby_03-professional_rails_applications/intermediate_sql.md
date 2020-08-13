@@ -32,6 +32,7 @@ Create an items table:
 `CREATE TABLE items(id SERIAL, name TEXT, revenue INT, course TEXT);`
 
 From above: What does `SERIAL` do?
+       - SERIAL creates a unique number identifier for the record
 
 Run `SELECT * FROM items;` to make sure it was successful.
 
@@ -56,15 +57,22 @@ VALUES ('lobster mac n cheese', 1200, 'side'),
 ##### Write queries for the following:
 
 1. What's the total revenue for all items?
+       - SELECT sum(revenue) FROM items;
 1. What's the average revenue for all items?
+       - SELECT avg(revenue) FROM items;
 1. What's the minimum revenue for all items?
+       - SELECT min(revenue) FROM items;
 1. What's the maximum revenue for all items?
+       - SELECT max(revenue) FROM items;
 1. What the count for items with a name?
+       - SELECT count(name) FROM items;
 
 Let's create an item that has all NULL values:
 `INSERT into items (name, revenue, course) VALUES (NULL, NULL, NULL);`
 
 Typically you `count` records in a table by counting on the `id` column, like `SELECT COUNT(id) FROM items;`. However, it's not necessary for a table to have an `id` column. What else can you pass to `count` and still get `5` as your result?
+       - SELECT count(id) FROM items;
+       - SELECT count(*) FROM items;
 
 #### Building on Aggregate Functions
 
@@ -78,10 +86,15 @@ How can we get the revenue based on the course?
 ##### Write queries for the following:
 
 1. Return all `main` courses. Hint: What ActiveRecord method would you use to get this?
+       - SELECT * FROM items where course = 'main';
+       - items.where('course = ?', 'main')
 1. Return only the names of the `main` courses.
+       - SELECT name as main_courses FROM items where course = 'main';
 1. Return the min and max value for the `main` courses.
+       - SELECT min(revenue), max(revenue) FROM items where course = 'main';
 1. What's the total revenue for all `main` courses?
-
+       - SELECT sum(revenue) as total_revenue_for_main_courses FROM items where course = 'main';
+       
 #### INNER JOINS
 
 Now to the fun stuff. If you're a visual learner, you'll probably want to keep [this article](https://blog.codinghorror.com/a-visual-explanation-of-sql-joins/) as you explore the concepts below. We're going to need multiple tables and to ensure we are on the same page, let's drop our table and populate our database with new data to experiment with.
@@ -167,6 +180,11 @@ This is useful, but we probably don't need all of the information from both tabl
 * Can you get it to display only the name for the item and the name for the season?
 * Having two columns with the same name is confusing. Can you customize each heading using `AS`?
 
+```SELECT items.name as item_name, seasons.name as seasons_name FROM items
+INNER JOIN seasons
+ON items.season_id = seasons.id;
+```
+
 It should look like this:
 
 ```sql
@@ -186,6 +204,12 @@ Now let's combine multiple `INNER JOIN`s to pull data from three tables `items`,
 
 * Write a query that pulls all the category names for `arugula salad`.
   Hint: Use multiple `INNER JOIN`s and a `WHERE` clause.
+  
+```SELECT items.name, categories.name FROM items 
+INNER JOIN item_categories ON items.id = item_categories.item_id 
+INNER JOIN categories ON categories.id = item_categories.category_id
+WHERE items.name = 'arugula salad';
+```
 
 Can you get your return value to look like this?
 
@@ -197,6 +221,12 @@ arugula salad | dinner
 arugula salad | lunch
 arugula salad | vegetarian
 (4 rows)
+```
+
+```SELECT items.name as item_name, categories.name as category_name FROM items 
+INNER JOIN item_categories ON items.id = item_categories.item_id 
+INNER JOIN categories ON categories.id = item_categories.category_id 
+WHERE items.name = 'arugula salad';
 ```
 
 Can you change the column headings?
@@ -278,13 +308,31 @@ What do you think a `RIGHT OUTER JOIN` will do?
 * Write a query to test your guess.
 * Insert data into the right table that will not get returned on an `INNER JOIN`.
 
+```SELECT *
+FROM items i
+RIGHT OUTER JOIN seasons s
+ON i.season_id = s.id;
+ id |         name         | revenue | season_id | id |  name  
+----+----------------------+---------+-----------+----+--------
+  6 | hot dog              |    1000 |         1 |  1 | summer
+  2 | veggie lasagna       |    1000 |         1 |  1 | summer
+  3 | striped bass         |     500 |         1 |  1 | summer
+  4 | burger               |    2000 |         1 |  1 | summer
+  7 | arugula salad        |    1100 |         2 |  2 | autumn
+  1 | lobster mac n cheese |    1200 |         3 |  3 | winter
+  5 | grilled cheese       |     800 |         4 |  4 | spring
+(7 rows)
+```
+
 ### Subqueries
 
 Sometimes you want to run a query based on the result of another query. Enter subqueries. Let's say I want to return all items with above average revenue. Two things need to happen:
 
 1. Calculate the average revenue.
+       `SELECT avg(revenue) FROM items;`
 1. Write a `WHERE` clause that returns the items that have a revenue
 greater than that average.
+       `SELECT i.name FROM items i WHERE revenue > (SELECT avg(revenue) FROM items);`
 
 Maybe something like this:
 `SELECT * FROM items WHERE revenue > AVG(revenue);`
@@ -300,6 +348,10 @@ WHERE revenue > (Insert your query that calculates the avg inside these parenthe
 
 The result should look like so...
 
+```SELECT * FROM items i
+WHERE revenue > (SELECT avg(revenue) FROM items);
+```
+
 ```sql
 id |         name         | revenue | season_id
 ----+----------------------+---------+-----------
@@ -313,11 +365,27 @@ id |         name         | revenue | season_id
 
 
 1. Without looking at the previous solution, write a `WHERE` clause that returns the items that have a revenue less than the average revenue.
+```SELECT * FROM items
+WHERE revenue < (SELECT avg(revenue) FROM items);
+```
 
 ### Additional Challenges
 
 * Write a query that returns the sum of all items that have a category of dinner.
+```SELECT sum(revenue), categories.name FROM items
+JOIN item_categories ON items.id = item_categories.item_id
+JOIN categories ON categories.id = item_categories.category_id
+WHERE categories.name = 'dinner' 
+GROUP BY categories.name;
+```
+
 * Write a query that returns the sum of all items for each category. The end result should look like this:
+```SELECT sum(revenue), categories.name FROM items
+JOIN item_categories ON items.id = item_categories.item_id
+JOIN categories ON categories.id = item_categories.category_id
+GROUP BY categories.name;
+```
+
 ```sql
 name       | sum
 -----------+------
